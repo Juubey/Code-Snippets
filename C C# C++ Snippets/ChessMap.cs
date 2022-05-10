@@ -1,31 +1,40 @@
-﻿using UnityEngine;
+﻿/*
+ * ChessMap.cs
+ * Author(s): Albert Njubi
+ * Date Created: 10/3/17
+ */
+
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-
+/// <summary>
+/// This class creates and writes the initial map data needed for the MazeCreation.cs.
+/// Creates the size of the map and places enemies in random coordinates.
+/// </summary>
 public class ChessMap : MonoBehaviour
 {
-
-
-    string maze = "";
-
-
+    #region public variables
     public int[][] map;
     public static string dataPath;
+    #endregion
+
+    #region private variables
+    // To write array to file
+    string maze = "";
     char[][] mazeArray;
     char[][] chessArray11x11;
     char[][] chessArray5x5;
     char[][] chessArray21x21;
-
-
     char[][] enemyArray;
     List<int[]> enemyCoordinates = new List<int[]>();
     int enemySpawnParam;
-
+    #endregion
 
     // Use this for initialization
     void Start()
     {
+        #region Map Gen
         /* Uncomment which CreateChess map we want. This will be done via UI button when integrated into the build.
          * Essentially this sets up the boundaries of the map and also sets enemySpawnParam to the appropriate int.
          * This allows us to soft code the create enemy string method using variables rather than do the math on the fly. */
@@ -35,7 +44,7 @@ public class ChessMap : MonoBehaviour
 
 
         /* This copies the array boundaries formed above and... actually I think that's all this does so we can get rid
-         * of this and consolidate somehow. But this is all getting edited tomorrow anyway so idc. :P */
+         * of this and consolidate somehow.*/
         CreateEnemyMap();
 
 
@@ -43,31 +52,33 @@ public class ChessMap : MonoBehaviour
          * and we use it here to set the parameters for possible enemy spawns. NOTE: the 5x5 gets super crowded as is. Also, we need
          * to spawn the player somehow. Probs just a array[64][64] = '0' (or whatever the player is represented as) in the right place */
         MonsterGen();
+        #endregion
 
-
-
-
-        /**---Map Gen---**/
         #region Deprecated
-        //CreateChessString5x5();
-        //CreateChessString11x11();
-        //CreateChessString21x21();
+        /*Map Gen
+        *CreateChessString5x5();
+        *CreateChessString11x11();
+        *CreateChessString21x21();
+        */
         #endregion
         /* The above three methods in the Deprecated region are so because whichever ChessMap method we choose prints out an array into 
          * the variable mazeArray, which gets printed out in this method. */
         CreateEnemyString();
 
 
-        /**---Data Path---**/
-        //Write all text into file, but remember: path to file must be
+        #region Data Path
+        /*Write all text into file, but remember: path to file must be. */
         System.IO.File.WriteAllText(Application.dataPath + "/Map.dat.txt", maze + System.Environment.NewLine);
         Debug.Log(Application.dataPath);
+        #endregion
     }
 
 
 
-
-
+    #region public methods
+    /// <summary>
+    /// This method creates a 5x5 map with 2 enemies spawned.
+    /// </summary>
     public void CreateChessMap5x5()
     {
         chessArray5x5 = new char[127][];
@@ -97,6 +108,9 @@ public class ChessMap : MonoBehaviour
     }
 
 
+    /// <summary>
+    /// This method creates a 11x11 map with 5 enemies spawned.
+    /// </summary>
     public void CreateChessMap11x11()
     {
         chessArray11x11 = new char[127][];
@@ -126,6 +140,9 @@ public class ChessMap : MonoBehaviour
     }
 
 
+    /// <summary>
+    /// This method creates a 21x21 map with 10 enemies spawned.
+    /// </summary>
     public void CreateChessMap21x21()
     {
         chessArray21x21 = new char[127][];
@@ -155,6 +172,9 @@ public class ChessMap : MonoBehaviour
     }
 
 
+    /// <summary>
+    /// This method creates a map of possible enemy spawns.
+    /// </summary>
     public void CreateEnemyMap()
     {
         enemyArray = new char[127][];
@@ -180,9 +200,9 @@ public class ChessMap : MonoBehaviour
 
         }
     }
+
     ///<summary>
-    /// Formats the array in a readable format
-    /// 
+    /// Formats the 11x11 array in a readable format
     /// </summary>
     public void CreateChessString11x11()
     {
@@ -199,7 +219,9 @@ public class ChessMap : MonoBehaviour
         maze = maze + '\n';
     }
 
-
+    ///<summary>
+    /// Formats the 5x5 array in a readable format
+    /// </summary>
     public void CreateChessString5x5()
     {
         for (int i = 0; i < 127; i++)
@@ -215,7 +237,9 @@ public class ChessMap : MonoBehaviour
         maze = maze + '\n';
     }
 
-
+    ///<summary>
+    /// Formats the 21x21 array in a readable format
+    /// </summary>
     public void CreateChessString21x21()
     {
         for (int i = 0; i < 127; i++)
@@ -230,7 +254,10 @@ public class ChessMap : MonoBehaviour
         }
         maze = maze + '\n';
     }
-    //----------------------------------------------------------------------------Everything above this is copied in
+
+    ///<summary>
+    /// Formats the enemy array in a readable format
+    /// </summary>
     public void CreateEnemyString()
     {
 
@@ -246,10 +273,11 @@ public class ChessMap : MonoBehaviour
         maze = maze + '\n';
     }
 
+    #endregion
 
+    #region private methods
     ///<summary>
     /// Generates monsters randomly onto an array
-    /// 
     /// </summary>
     void MonsterGen()
     {
@@ -266,9 +294,6 @@ public class ChessMap : MonoBehaviour
                     if ((i <= 64 + enemySpawnParam && i >= 64 - enemySpawnParam) && j <= 64 + enemySpawnParam && j >= 64 - enemySpawnParam)
                     {
                         bool checkDistance = true;
-                        //if (enemyArray[i][j] == '0')
-                        //    continue;
-
 
                         float enemySpawn = UnityEngine.Random.value;
 
@@ -277,9 +302,6 @@ public class ChessMap : MonoBehaviour
                         {
                             continue;
                         }
-
-
-
 
                         foreach (int[] current in enemyCoordinates)
                         {
@@ -314,7 +336,9 @@ public class ChessMap : MonoBehaviour
         }
     }
 
-
+    ///<summary>
+    /// Checks the distance of coordinates to one another.
+    /// </summary>
     int distanceTo(int y1, int x1, int y2, int x2)
     {
         int distanceX = Mathf.Abs(x1 - x2);
@@ -327,15 +351,7 @@ public class ChessMap : MonoBehaviour
 
 
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-
-
-
-    }
+    #endregion
 }
 
 

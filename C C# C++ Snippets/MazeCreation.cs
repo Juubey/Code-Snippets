@@ -1,45 +1,46 @@
-﻿using UnityEngine;
+﻿/*
+ * MazeCreation.cs
+ * Author(s): Albert Njubi
+ * Date Created: 10/7/17
+ */
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+/// <summary>
+/// This class creates a maze with arrays that have variables for
+/// height, width and spawn coordinates.
+/// </summary>
 public class MazeCreation : MonoBehaviour {
 
+    #region private variables
     string maze = "";
+    char[][] mazeArray;
+    char[][] enemyArray;
+    char[][] textureArray;
+    int[][] mat;
+    List<int[]> enemyCoordinates = new List<int[]>();
+    #endregion
+
+    #region public variables
     public int MapWidth { get; set; }
     public int MapHeight { get; set; }
     public int PercentAreWalls { get; set; }
     public int[,] Map;
     public static string dataPath;
+    #endregion
 
-    //public ScriptName cellScript;
-    //CellMapCreation cellScript;
-
-    char[][] mazeArray;
-    char[][] enemyArray;
-    char[][] textureArray;
-    int[][] mat;
-
-    List<int[]> enemyCoordinates = new List<int[]>();
-
-
-
-
-
-
-    // Use this for initialization
-    void Start()
-    {
-
-
-
-    }
-
+    #region public methods
+    /// <summary>
+    /// This method creates a maze and prints the file.
+    /// Movable area is printed with 'A', enemy coordinates and '.' and spaces are '0'.
+    /// </summary>
     public void createMazeFile()
     {
-        //cellScript = gameObject.GetComponent<CellMapCreation>();
         mat = new int[127][];
         #region ArrayDeclarations
-        mazeArray = new char[127][]; //declared jagged2D array
+        //declared jagged2D array
+        mazeArray = new char[127][];
         for (int i = 0; i < 127; i++)
         {
             mazeArray[i] = new char[127];
@@ -85,30 +86,184 @@ public class MazeCreation : MonoBehaviour {
         }
         #endregion
 
-        /**---Maze Gen---**/
+        #region Generation Calls
+        //Maze Generation
         recursiveFuction(10, 10);
-        //createFilledCircle (30,30);
 
-        /**---Item Gen---**/
+        //Item Generation
         monsterGen();
         createString();
 
-        /**---Cellular Generation---**/
-        //cellScript.MakeCaverns();
-        //cellScript.createString();
+        //Cell Generation
         MakeCaverns();
         createString();
 
-        /**---Data Path---**/
+        //Data Path
         //Write all text into file, but remember: path to file must be
         System.IO.File.WriteAllText(Application.dataPath + "/Map.dat.txt", maze + System.Environment.NewLine);
+        #endregion
+    }
+    /// <summary>
+    /// This method creates the string of data from the maze and enemy arrays.
+    /// </summary>
+    public void createString()
+    {
+        mazeArray[64][64] = '.';
+        enemyArray[64][64] = '0';
+        for (int l = 0; l < 3; l++)
+        {
+            for (int i = 0; i < 127; i++)
+            {
+                for (int j = 0; j < 127; j++)
+                {
+                    switch (l)
+                    {
+                        case 2:
+                            maze += textureArray[i][j];
+                            break;
+                        case 1:
+                            maze += enemyArray[i][j];
+                            break;
+                        case 0:
+                            maze += mazeArray[i][j];
+                            break;
+                    }
+                }
+                maze = maze + '\n';
+            }
+            maze = maze + '\n';
+        }
     }
 
+    ///<summary>
+    /// Makes a Cellular Cavern Map
+    /// </summary>
+    public void MakeCaverns()
+    {
+
+        MapWidth = 127;
+        MapHeight = 127;
+        PercentAreWalls = 40;
+
+        // New, empty map
+        Map = new int[MapWidth, MapHeight];
+
+        int mapMiddle = 0; // Temp variable
+        for (int column = 0, row = 0; row < MapHeight; row++)
+        {
+            for (column = 0; column < MapWidth; column++)
+            {
+                // If coordinants lie on the the edge of the map (creates a border)
+                if (column == '.')
+                {
+                    Map[column, row] = 'A';
+                }
+                else if (row == '.')
+                {
+                    Map[column, row] = 'A';
+                }
+                else if (column == MapWidth - 1)
+                {
+                    Map[column, row] = 'A';
+                }
+                else if (row == MapHeight - 1)
+                {
+                    Map[column, row] = 'A';
+                }
+                // Else, fill with a wall a random percent of the time
+                else
+                {
+                    mapMiddle = (MapHeight / 2);
+
+                    if (row == mapMiddle)
+                    {
+                        Map[column, row] = '.';
+                    }
+                    else
+                    {
+                        Map[column, row] = RandomPercent(PercentAreWalls);
+                    }
+                }
+            }
+        }
+
+        // By initilizing column in the outter loop, its only created ONCE
+        for (int column = 0, row = 0; row <= MapHeight - 1; row++)
+        {
+            for (column = 0; column <= MapWidth - 1; column++)
+            {
+                Map[column, row] = PlaceWallLogic(column, row);
+            }
+        }
+    }
+    /// <summary>
+    /// Places a wall if the coordinate value is 'A' 
+    /// and there are adjacent walls.
+    /// </summary>
+    public int PlaceWallLogic(int x, int y)
+    {
+        int numWalls = GetAdjacentWalls(x, y, 1, 1);
+
+
+        if (Map[x, y] == 'A')
+        {
+            if (numWalls >= 4)
+            {
+                return 1;
+            }
+            if (numWalls < 2)
+            {
+                return 0;
+            }
+
+        }
+        else
+        {
+            if (numWalls >= 5)
+            {
+                return 1;
+            }
+        }
+        return 0;
+    }
+    /// <summary>
+    /// Checks the coordinates if it is on the border of the map then
+    /// it is a wall.
+    /// </summary>
+    public int GetAdjacentWalls(int x, int y, int scopeX, int scopeY)
+    {
+        int startX = x - scopeX;
+        int startY = y - scopeY;
+        int endX = x + scopeX;
+        int endY = y + scopeY;
+
+        int iX = startX;
+        int iY = startY;
+
+        int wallCounter = 0;
+
+        for (iY = startY; iY <= endY; iY++)
+        {
+            for (iX = startX; iX <= endX; iX++)
+            {
+                if (!(iX == x && iY == y))
+                {
+                    if (IsWall(iX, iY))
+                    {
+                        wallCounter += 1;
+                    }
+                }
+            }
+        }
+        return wallCounter;
+    }
+    #endregion
+
+    #region private methods
 
     ///<summary>
     /// A recursive fuction that checks the currect positon of x and y
     /// Picks a random direction and decides if its an empty space
-    /// 
     /// </summary>
     void recursiveFuction(int x, int y)
     {
@@ -176,7 +331,6 @@ public class MazeCreation : MonoBehaviour {
 
     ///<summary>
     /// Creates randomly placed circles on a maze
-    /// 
     /// </summary>
     void createFilledCircle(int x, int y)
     {
@@ -217,7 +371,6 @@ public class MazeCreation : MonoBehaviour {
 
     ///<summary>
     /// Generates areas of Items in a spiral
-    /// 
     /// </summary>
     void monsterGen()
     {
@@ -241,15 +394,6 @@ public class MazeCreation : MonoBehaviour {
                     {
                         continue;
                     }
-                    /*if(firstPass == false)
-                    {
-                        mazeArray[i][j] = '1';
-                        currentEnemyCoordinate[0] = i;
-                        currentEnemyCoordinate[1] = j;
-                        enemyCoordinates.Add(currentEnemyCoordinate);
-                        firstPass = true;
-                        continue;
-                    }*/
 
                     foreach (int[] current in enemyCoordinates)
                     {
@@ -279,184 +423,9 @@ public class MazeCreation : MonoBehaviour {
             }
         }
     }
-
-    int distanceTo(int y1, int x1, int y2, int x2)
-    {
-        int distanceX = Mathf.Abs(x1 - x2);
-        int distanceY = Mathf.Abs(y1 - y2);
-
-        if (distanceX > distanceY)
-            return 14 * distanceY + 10 * (distanceX - distanceY);
-        return 14 * distanceX + 10 * (distanceY - distanceX);
-
-    }
-
-
-
-    ///<summary>
-    /// Formats the array in a readable format
-    /// 
+    /// <summary>
+    /// boolean method that returns if the coordinate is a wall or not.
     /// </summary>
-    /**public void createString()
-	{
-		for(int i = 0; i < 127; i++)
-		{
-			for (int j = 0; j < 127; j++) 
-			{
-				maze += mazeArray [i] [j];
-
-			}
-			maze = maze + '\n';
-		}
-       
-    }**/
-
-    public void createString()
-    {
-        mazeArray[64][64] = '.';
-        enemyArray[64][64] = '0';
-        for (int l = 0; l < 3; l++)
-        {
-            for (int i = 0; i < 127; i++)
-            {
-                for (int j = 0; j < 127; j++)
-                {
-                    switch (l)
-                    {
-                        case 2:
-                            maze += textureArray[i][j];
-                            break;
-                        case 1:
-                            maze += enemyArray[i][j];
-                            break;
-                        case 0:
-                            maze += mazeArray[i][j];
-                            break;
-                    }
-                }
-                maze = maze + '\n';
-            }
-            maze = maze + '\n';
-        }
-    }
-
-    ///<summary>
-    /// Makes a Cellular Cavern Map
-    /// 
-    /// </summary>
-    public void MakeCaverns()
-    {
-
-        MapWidth = 127;
-        MapHeight = 127;
-        PercentAreWalls = 40;
-
-        // New, empty map
-        Map = new int[MapWidth, MapHeight];
-
-        int mapMiddle = 0; // Temp variable
-        for (int column = 0, row = 0; row < MapHeight; row++)
-        {
-            for (column = 0; column < MapWidth; column++)
-            {
-                // If coordinants lie on the the edge of the map (creates a border)
-                if (column == '.')
-                {
-                    Map[column, row] = 'A';
-                }
-                else if (row == '.')
-                {
-                    Map[column, row] = 'A';
-                }
-                else if (column == MapWidth - 1)
-                {
-                    Map[column, row] = 'A';
-                }
-                else if (row == MapHeight - 1)
-                {
-                    Map[column, row] = 'A';
-                }
-                // Else, fill with a wall a random percent of the time
-                else
-                {
-                    mapMiddle = (MapHeight / 2);
-
-                    if (row == mapMiddle)
-                    {
-                        Map[column, row] = '.';
-                    }
-                    else
-                    {
-                        Map[column, row] = RandomPercent(PercentAreWalls);
-                    }
-                }
-            }
-        }
-
-        // By initilizing column in the outter loop, its only created ONCE
-        for (int column = 0, row = 0; row <= MapHeight - 1; row++)
-        {
-            for (column = 0; column <= MapWidth - 1; column++)
-            {
-                Map[column, row] = PlaceWallLogic(column, row);
-            }
-        }
-    }
-
-    public int PlaceWallLogic(int x, int y)
-    {
-        int numWalls = GetAdjacentWalls(x, y, 1, 1);
-
-
-        if (Map[x, y] == 'A')
-        {
-            if (numWalls >= 4)
-            {
-                return 1;
-            }
-            if (numWalls < 2)
-            {
-                return 0;
-            }
-
-        }
-        else
-        {
-            if (numWalls >= 5)
-            {
-                return 1;
-            }
-        }
-        return 0;
-    }
-    public int GetAdjacentWalls(int x, int y, int scopeX, int scopeY)
-    {
-        int startX = x - scopeX;
-        int startY = y - scopeY;
-        int endX = x + scopeX;
-        int endY = y + scopeY;
-
-        int iX = startX;
-        int iY = startY;
-
-        int wallCounter = 0;
-
-        for (iY = startY; iY <= endY; iY++)
-        {
-            for (iX = startX; iX <= endX; iX++)
-            {
-                if (!(iX == x && iY == y))
-                {
-                    if (IsWall(iX, iY))
-                    {
-                        wallCounter += 1;
-                    }
-                }
-            }
-        }
-        return wallCounter;
-    }
-
     bool IsWall(int x, int y)
     {
         // Consider out-of-bound a wall
@@ -476,7 +445,9 @@ public class MazeCreation : MonoBehaviour {
         }
         return false;
     }
-
+    /// <summary>
+    /// boolean method that returns if the area is out of bounds.
+    /// </summary>
     bool IsOutOfBounds(int x, int y)
     {
         if (x < 0 || y < 0)
@@ -489,7 +460,9 @@ public class MazeCreation : MonoBehaviour {
         }
         return false;
     }
-
+    /// <summary>
+    /// Using the UnityEngine Random namespace to generate a random range of integers.
+    /// </summary>
     int RandomPercent(int percent)
     {
         if (percent >= UnityEngine.Random.Range(1, 101))
@@ -498,12 +471,19 @@ public class MazeCreation : MonoBehaviour {
         }
         return 0;
     }
-
-
-    // Update is called once per frame
-    void Update()
+    /// <summary>
+    /// Checks distance of coordinates to each other.
+    /// </summary>
+    int distanceTo(int y1, int x1, int y2, int x2)
     {
+        int distanceX = Mathf.Abs(x1 - x2);
+        int distanceY = Mathf.Abs(y1 - y2);
+
+        if (distanceX > distanceY)
+            return 14 * distanceY + 10 * (distanceX - distanceY);
+        return 14 * distanceX + 10 * (distanceY - distanceX);
 
     }
+    #endregion
 }
 

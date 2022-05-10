@@ -1,31 +1,39 @@
-﻿using UnityEngine;
+﻿/*
+ * Map.cs
+ * Author(s): Albert Njubi
+ * Date Created: 10/4/17
+ */
+using UnityEngine;
 using System.Collections;
 using System.IO;
 using System.Text;
 
+/// <summary>
+/// This class writes and saves all map text to the path specified
+/// </summary>
 public class Map : MonoBehaviour {
 
-	//public GameObject mazeCells;
-
+	#region private functions
+	/// <summary>
+	/// Calls the method to write all of the text
+	/// </summary>
 	void Start()
 	{
-		Debug.Log("Runs");
 		WriteAllText ();
-
-
 	}
 
+	/// <summary>
+	/// This method writes all of the 2D Array matrix to file
+    /// and saves it to a path in documents.
+	/// </summary>
 	void WriteAllText() 
 	{
-		//Opens the text Document
-		//System.IO.File.Open(@"C:/Users/" + System.Environment.UserName + "/Documents/PerfectMazeGenerator/Assets/Scripts/Map.dat");
 
 		// To write array to file
 		string str = "";
 
-		//int [][] mazeArray = new int[127][]; jagged array
-
-		int [,] mazeArray = new int [127, 127]; //2D Array matrix
+		//2D Array matrix
+		int[,] mazeArray = new int [127, 127]; 
 		for (int i = 0; i < mazeArray.GetLength (0); i++) 
 		{
 			
@@ -37,29 +45,14 @@ public class Map : MonoBehaviour {
 				Debug.Log(str);
 			}
 		}
+        #endregion
 
-		Debug.Log(mazeArray);
-
-		/*for(int i = 0; i <= 127; i++) 
-		{
-
-			for(int j = 0; j <= 127; j++) 
-			{
-
-				str = str + (i.ToString() + " " + j.ToString() + " " + System.Environment.NewLine + "\n");
-				Debug.Log(str);
-			}
-		}*/
-
-		string path = "C:/Users/" + System.Environment.UserName + "/Documents/PerfectMazeGenerator/Assets/Scripts/Map.dat";
-		Debug.Log (path);
+        string path = "C:/Users/" + System.Environment.UserName + "/Documents/PerfectMazeGenerator/Assets/Scripts/Map.dat";
 
 		//Write all text into file, but remember: path to file must be
 		System.IO.File.WriteAllText("C:/Users/" + System.Environment.UserName + "/Documents/PerfectMazeGenerator/Assets/Scripts/Map.dat" , str);
-		//File.ReadAllText(
 
 		//Read and print all text from file into the debugger
 		string readText = File.ReadAllText("C:/Users/" + System.Environment.UserName + "/Documents/PerfectMazeGenerator/Assets/Scripts/Map.dat");
-		Debug.Log(readText);
 	}
 }
